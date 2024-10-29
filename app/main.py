@@ -1,13 +1,13 @@
 from fastapi import  FastAPI, HTTPException,Response,status, Depends
 from fastapi.params import Body
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional,List
 from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
 from sqlalchemy.orm import Session
-from . import models
+from . import models,schemas
 from .database import engine,get_db
 
 models.Base.metadata.create_all(bind=engine)
@@ -16,10 +16,10 @@ app = FastAPI()
 
 
 
-class Post(BaseModel):
-    title: str
-    content: str
-    published : bool = True
+# class Post(BaseModel):
+#     title: str
+#     content: str
+#     published : bool = True
     
 
 while True:
@@ -49,15 +49,16 @@ def find_index_post(id):
 async def root():
     return {"message":"welcome to my api!"}
 
-@app.get("/sqlalchemy")
-def test_posts( db: Session = Depends(get_db)):
-    posts = db.query(models.Post).all()
-    return {"data": posts}
+# @app.get("/sqlalchemy")
+# def test_posts( db: Session = Depends(get_db)):
+#     posts = db.query(models.Post).all()
+#     return {"data": posts}
 
-@app.get("/posts")
+#response_model=List[schemas.Post]
+@app.get("/posts", response_model=List[schemas.Post])
 def get_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
-    return {"data": posts}
+    return posts
     '''
     cursor.execute(""" SELECT * FROM post """)
     posts = cursor.fetchall()
@@ -65,15 +66,15 @@ def get_posts(db: Session = Depends(get_db)):
  
    '''
 
-@app.post("/posts",status_code= status.HTTP_201_CREATED)
-def create_posts(post: Post,db: Session = Depends(get_db)):
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=List[schemas.Post])
+def create_posts(post: schemas.PostCreate,db: Session = Depends(get_db)):
     #new_post = models.Post(title = post.title,content = post.content,published= post.published)
     
     new_post=models.Post(**post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return {"data": new_post}
+    return  new_post
     # cursor.execute("""INSERT INTO post (title,content,published) VALUES (%s,%s,%s) RETURNING * """,
     # (
     #     post.title,post.content,post.published
@@ -122,7 +123,7 @@ def delete_post(id: int,db: Session = Depends(get_db)):
 
 
 @app.put("/posts/{id}")
-def update_post(id:int, post:Post,db: Session = Depends(get_db)):
+def update_post(id:int, post: schemas.PostCreate ,db: Session = Depends(get_db)):
     # cursor.execute(""" UPDATE  post SET title = %s, content =%s,published =%s WHERE id = %s RETURNING * """,(
     #     post.title,post.content,post.published,str(id),
     # ))
@@ -135,3 +136,11 @@ def update_post(id:int, post:Post,db: Session = Depends(get_db)):
     post_query.update(post.dict(),synchronize_session=False)
     db.commit()
     return {'data': post_query.first()}
+#,response_model=schemas.UserOut
+@app.post("/users",status_code=status.HTTP_201_CREATED,response_model=schemas.UserOut)
+def create_user(user:schemas.UserCreate,db: Session = Depends(get_db)):
+    new_user=models.User(**user.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return  new_user
