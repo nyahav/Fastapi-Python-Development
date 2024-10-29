@@ -16,6 +16,7 @@ This project also introduced me to **CI/CD pipelines** with GitHub Actions, enab
 
 - **FastAPI** - Framework for high-performance APIs
 - **PostgreSQL** - Relational database management
+- **Postman** - API testing and debugging tool to validate endpoints 
 - **SQLAlchemy** - ORM to handle database interaction
 - **Alembic** - Database migrations
 - **JWT** - Secure authentication with JSON Web Tokens
@@ -29,6 +30,7 @@ This project also introduced me to **CI/CD pipelines** with GitHub Actions, enab
 
 - [Project Setup](#project-setup)
 - [FastAPI Essentials](#fastapi-essentials)
+- [Postman API Testing](#postman-api-testing)
 - [Database Integration](#database-integration)
 - [Authentication](#authentication)
 - [Deployment](#deployment)
@@ -76,6 +78,15 @@ PostgreSQL Setup & SQLAlchemy ORM
     SQLAlchemy: Connecting to PostgreSQL and managing models and relationships.
 
 python
+
+## 🧪 Postman API Testing
+
+Throughout this project, I used **Postman** to interact with and test my API endpoints. Postman allowed me to validate the API’s functionality at each stage, ensuring responses matched expectations and that each endpoint worked as intended. Key tasks included:
+
+- **Creating and managing collections** for API requests
+- **Organizing requests** for different routes (CRUD operations, authentication, etc.)
+- **Testing endpoints** with various data inputs
+- **Saving requests** to streamline the testing process and ensure consistency
 
 # Example model with SQLAlchemy
 from sqlalchemy import Column, Integer, String
