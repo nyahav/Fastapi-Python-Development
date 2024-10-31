@@ -3,7 +3,13 @@ from datetime import datetime
 from typing import Optional
 
 
-    
+ 
+class UserOut(BaseModel):
+    id: int
+    email: EmailStr
+    class Config:
+        from_attributes = True
+            
 class PostBase(BaseModel):
     title: str
     content: str
@@ -15,6 +21,8 @@ class PostCreate(PostBase):
 class Post(PostBase):
     id: int
     created_at: datetime
+    owner_id: int
+    owner: UserOut
     class Config:
         from_attributes = True
     
@@ -22,12 +30,7 @@ class Post(PostBase):
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    
-class UserOut(BaseModel):
-    id: int
-    email: EmailStr
-    class Config:
-        from_attributes = True
+   
         
 class UserLogin(BaseModel):
     email: EmailStr
@@ -36,6 +39,6 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
-    
+
 class TokenData(BaseModel):
     id: Optional[str] = None
