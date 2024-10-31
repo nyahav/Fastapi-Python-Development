@@ -1,4 +1,5 @@
 from fastapi import  FastAPI, HTTPException,Response,status, Depends,APIRouter
+from sqlalchemy import func
 from .. import models,schemas,oauth2
 from ..database import get_db
 from typing import List, Optional
@@ -9,13 +10,13 @@ router = APIRouter(
     tags = ['Posts']
 )
 
-@router.get("/", response_model=List[schemas.Post])
+@router.get("/", response_model=List[schemas.PostOut])
 def get_posts(db: Session = Depends(get_db),current_user: int = Depends(oauth2.get_current_user)
               ,limit: int = 10, skip: int = 0, search: Optional[str] = ""):
-    posts = db.query(models.Post).filter(
-        models.Post.owner_id == current_user.id
-    ).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
-    return posts
+    posts = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    return posts    
+    
     '''
     cursor.execute(""" SELECT * FROM post """)
     posts = cursor.fetchall()
@@ -47,22 +48,20 @@ def create_posts(post: schemas.PostCreate,db: Session = Depends(get_db),current_
 
 
 
-@router.get("/{id}")
+@router.get("/{id}", response_model=schemas.PostOut)
 def get_post(id:int,response: Response,db: Session = Depends(get_db),current_user: int = Depends(oauth2.get_current_user)):
     # cursor.execute(""" SELECT * FROM post WHERE id = %s """,(str(id),))
     # post = cursor.fetchone()
     # print(post)
     #post = find_post(id)
-    post = db.query(models.Post).filter(models.Post.id == id).first()
+    post = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.id == id).first()
+
     if not post:
-        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,
-                            detail=f"post with id:{id} was not found")
-    if post.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Not authorized to perform requested action")    
-        #response.status_code = status.HTTP_404_NOT_FOUND
-        #return {'message':f"post with id:{id} was not found"}
-    return {"post details": post}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id: {id} was not found")
+
+    return post
     #return {"post_detail": f"this is the post {id} ,you were intrested in "}
     
 @router.delete("/{id}",status_code=status.HTTP_204_NO_CONTENT)
